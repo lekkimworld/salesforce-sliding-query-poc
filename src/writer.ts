@@ -4,16 +4,17 @@ dotenv_config();
 
 import { EventEmitter } from "stream";
 import getRedisClient from "./redis";
-import { RECORD_QUEUE } from "./constants";
+import { RECORD_QUEUE, WRITER_TIMEOUT_SECS } from "./constants";
 
 const redisClient = getRedisClient();
 const eventEmitter = new EventEmitter();
+
 
 const doWork = async (): Promise<void> => {
     if (!redisClient.isOpen) {
         await redisClient.connect();
     }
-    const str_record = await redisClient.blPop(RECORD_QUEUE, 10);
+    const str_record = await redisClient.blPop(RECORD_QUEUE, WRITER_TIMEOUT_SECS);
     if (!str_record) {
         eventEmitter.emit("noRecords");
         return Promise.resolve();
